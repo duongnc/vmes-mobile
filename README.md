@@ -2,7 +2,7 @@
 
 **Phiên bản:** 1.0  
 **Ngày phát hành:** 12/06/2026  
-**Tổ chức thực hiện:** VTX
+**Tổ chức thực hiện:** VHT
 
 ## Giới thiệu Dự án
 
@@ -146,10 +146,10 @@ vmes-mobile/
 
 ## Giấy Phép
 
-Để xác định được giấy phép, vui lòng liên hệ với tổ chức thực hiện VTX.
+Để xác định được giấy phép, vui lòng liên hệ với tổ chức thực hiện VHT.
 
 ## Liên Hệ
 
 Để có thêm thông tin về dự án, vui lòng liên hệ:
-- **Tổ chức:** VTX
-- **Người dùng cuối:** VTX
+- **Tổ chức:** VHT
+- **Người dùng cuối:** VHT
