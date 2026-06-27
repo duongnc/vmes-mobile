@@ -1,7 +1,7 @@
+import { MOCK_BOM_WO2428, useBomStore } from '@/store/useBomStore'; // cú pháp @/store/... để import từ thư mục gốc (root) của dự án
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { MOCK_BOM_WO2428, useBomStore } from '../../store/useBomStore';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -31,6 +31,8 @@ export default function HomeScreen() {
     
     if (!isAllScanned) {
       Alert.alert("Cảnh báo", "Bạn chưa đối soát hết linh kiện trong BOM!");
+      Alert.alert("Quay lại bấm nút quét linh kiện để tiếp tục đối soát.");
+      router.push('/scanner');
       return;
     }
     
