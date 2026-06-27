@@ -1,98 +1,120 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MOCK_BOM_WO2428, useBomStore } from '../../store/useBomStore';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  
+  // Lấy state và action từ Zustand
+  const { currentWO, bomList, markAsScanned, resetAndSwitchWO } = useBomStore();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // Xử lý mã QR từ màn hình scanner trả về
+  useEffect(() => {
+    if (params.scannedCode) {
+      const code = params.scannedCode as string;
+      const success = markAsScanned(code);
+      
+      if (success) {
+        Alert.alert("Khớp BOM", `Đã xác nhận: ${code}`);
+      } else {
+        Alert.alert("Lỗi Đối Soát", `Mã ${code} không có trong BOM hoặc đã quét.`);
+      }
+      // Dọn param URL
+      router.setParams({ scannedCode: '' });
+    }
+  }, [params.scannedCode]);
+
+  const handleCompleteStep = () => {
+    const isAllScanned = bomList.every(item => item.isScanned === true);
+    
+    if (!isAllScanned) {
+      Alert.alert("Cảnh báo", "Bạn chưa đối soát hết linh kiện trong BOM!");
+      return;
+    }
+    
+    Alert.alert("Thành công", "Đã xác nhận hoàn thành công đoạn!");
+  };
+
+  const handleSwitchWO = () => {
+    Alert.alert("Chuyển lệnh", "Bắt đầu sản xuất WO-2428", [
+      {
+        text: "OK",
+        onPress: () => {
+          // Dùng hàm Zustand để nạp dữ liệu mới, reset trạng thái tự động
+          resetAndSwitchWO('WO-2428', MOCK_BOM_WO2428);
+        }
+      }
+    ]);
+  };
+
+  // Kiểm tra xem lệnh hiện tại đã xong chưa để hiện nút chuyển lệnh
+  const isOrderFinished = bomList.every(item => item.isScanned === true);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.userName}>👤 Nguyễn Văn A - Công nhân</Text>
+        <Text style={styles.woText}>📋 Lệnh SX: {currentWO} (Đang chạy)</Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>🔧 Công đoạn hiện tại:</Text>
+        <Text style={styles.taskName}>▶ Hàn sóng (Bước 3/8)</Text>
+        
+        <View style={{ marginBottom: 15 }}>
+          <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Danh mục vật tư (BOM):</Text>
+          {bomList.map((item) => (
+            <View key={item.id} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#eee' }}>
+              <Text style={{ color: item.isScanned ? 'green' : 'black', fontSize: 16 }}>
+                {item.isScanned ? '✅' : '⏳'} {item.mpn} ({item.name})
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#007bff', marginBottom: 10 }]} 
+          onPress={() => router.push('/scanner')}
+        >
+          <Text style={styles.buttonText}>📷 QUÉT LINH KIỆN</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={handleCompleteStep}>
+          <Text style={styles.buttonText}>✅ HOÀN THÀNH BƯỚC</Text>
+        </TouchableOpacity>
+
+        {/* Nút chuyển lệnh chỉ hiện ra khi đã quét xong BOM */}
+        {isOrderFinished && (
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: '#6f42c1', marginTop: 10 }]} 
+            onPress={handleSwitchWO}
+          >
+            <Text style={styles.buttonText}>🔄 CHUYỂN LỆNH TIẾP THEO</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={[styles.card, { marginTop: 16 }]}>
+        <Text style={styles.cardTitle}>📊 Các lệnh chờ:</Text>
+        {currentWO === 'WO-2427' && <Text style={styles.pendingItem}>• WO-2428 – Chờ linh kiện cấp bù</Text>}
+        <Text style={styles.pendingItem}>• WO-2429 – Chờ QC FAI duyệt</Text>
+      </View>
+    </View>
   );
 }
 
+// ... (Giữ nguyên phần styles như cũ)
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1, padding: 16, backgroundColor: '#f8f9fa', marginTop: 40 },
+  header: { marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#ccc', paddingBottom: 10 },
+  userName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  woText: { fontSize: 16, color: '#666', marginTop: 4 },
+  card: { backgroundColor: 'white', padding: 16, borderRadius: 12, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  cardTitle: { fontSize: 16, color: '#555', marginBottom: 8 },
+  taskName: { fontSize: 20, fontWeight: 'bold', marginBottom: 16, color: '#111' },
+  button: { backgroundColor: '#28a745', padding: 16, borderRadius: 8, alignItems: 'center' },
+  buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  pendingItem: { fontSize: 16, color: '#333', marginBottom: 8, fontWeight: '500' }
 });
