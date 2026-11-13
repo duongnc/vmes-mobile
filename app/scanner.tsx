@@ -7,7 +7,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import { Banner, Button, Empty, Field, Icon, Row, styles as ui } from '@/components/ui';
 import { C } from '@/constants/theme';
 import { currentStep } from '@/lib/metrics';
-import { buildCode, ScanResult } from '@/lib/scan';
+import { buildCode, ScanResult, todayIso } from '@/lib/scan';
 import { useMesStore } from '@/store/useMesStore';
 
 export default function ScannerScreen() {
@@ -41,6 +41,13 @@ export default function ScannerScreen() {
   if (!wo) {
     return <Empty icon="search-off" text="Không tìm thấy lệnh sản xuất." />;
   }
+
+  // Khi nhãn QR chỉ ghi mã linh kiện, cho chọn lô đã qua IQC thay vì chặn hẳn
+  const today = todayIso();
+  const pickableLots =
+    result?.code === 'NO_LOT_INFO'
+      ? lots.filter((l) => l.mpn.toUpperCase() === result.parsed.mpn && l.status === 'accepted' && l.expiry >= today)
+      : [];
 
   const step = currentStep(wo);
   const stepBom = wo.bom.filter((b) => !step || b.stepNo === step.no);
@@ -119,6 +126,22 @@ export default function ScannerScreen() {
                 />
               ) : null}
             </Row>
+            {result.code === 'NO_LOT_INFO' && pickableLots.length > 0 ? (
+              <View style={ui.card}>
+                <Text style={[ui.title, { marginBottom: 4 }]}>Nhãn không ghi số lô, chọn lô đang cầm trên tay</Text>
+                <Text style={[ui.sub, { marginBottom: 6 }]}>Chỉ hiện các lô của {result.parsed.mpn} đã qua IQC và còn hạn.</Text>
+                {pickableLots.map((l) => (
+                  <Pressable key={l.id} accessibilityRole="button" onPress={() => handleCode(buildCode(l))} style={styles.demoRow}>
+                    <Text style={{ fontWeight: '700', color: C.text }}>
+                      Lô {l.lot} · {l.supplier}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: C.sub }}>
+                      {l.coc} · HSD {l.expiry} · SL {l.qty}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
           </>
         ) : null}
 

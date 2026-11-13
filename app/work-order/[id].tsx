@@ -13,6 +13,7 @@ import {
   Empty,
   Field,
   Icon,
+  IconName,
   InfoLine,
   notifyUser,
   Row,
@@ -73,6 +74,29 @@ export default function WorkOrderScreen() {
   const timerColor = ratio >= OVER_RATIO ? C.red : ratio >= WARN_RATIO ? C.yellow : C.green;
   const stepBom = step ? wo.bom.filter((b) => b.stepNo === step.no) : [];
   const stepBomDone = stepBom.every((b) => b.scans.length >= b.qtyRequired);
+  const scannedCount = stepBom.reduce((a, b) => a + Math.min(b.scans.length, b.qtyRequired), 0);
+  const requiredCount = stepBom.reduce((a, b) => a + b.qtyRequired, 0);
+
+  // Gợi ý thao tác kế tiếp để kỹ thuật viên luôn biết mình đang bị chặn ở đâu
+  const nextHint: { tone: 'primary' | 'yellow' | 'red' | 'green'; icon: IconName; text: string } = !step
+    ? { tone: 'green', icon: 'verified', text: 'Lệnh đã hoàn thành.' }
+    : wo.hold
+      ? {
+          tone: 'red',
+          icon: 'pan-tool',
+          text: `Lệnh đang bị giữ (${wo.hold.reason}). Chưa thể làm tiếp cho đến khi được gỡ giữ. Nếu thiếu linh kiện, hãy dùng "Yêu cầu cấp bù" bên dưới.`,
+        }
+      : step.status === 'pending'
+        ? { tone: 'primary', icon: 'play-arrow', text: 'Bấm BẮT ĐẦU CÔNG ĐOẠN để tính giờ.' }
+        : step.status === 'paused'
+          ? { tone: 'yellow', icon: 'pause', text: 'Công đoạn đang tạm dừng. Bấm TIẾP TỤC để chạy tiếp.' }
+          : !stepBomDone
+            ? {
+                tone: 'yellow',
+                icon: 'qr-code-scanner',
+                text: `Cần quét đủ linh kiện của bước này (đã ${scannedCount}/${requiredCount}) bằng nút QUÉT LINH KIỆN, rồi mới hoàn thành được bước.`,
+              }
+            : { tone: 'green', icon: 'check-circle', text: 'Đã đủ điều kiện. Bấm HOÀN THÀNH BƯỚC.' };
 
   const act = (fn: (woId: string) => { ok: boolean; message: string }, silentOk = true) => {
     const res = fn(wo.id);
@@ -147,13 +171,13 @@ export default function WorkOrderScreen() {
 
             {isTech ? (
               <View style={{ gap: 10, marginTop: 12 }}>
+                <Banner tone={nextHint.tone} icon={nextHint.icon} title="Bước tiếp theo" text={nextHint.text} />
                 {step.status === 'running' ? (
                   <Button label="TẠM DỪNG" icon="pause" tone="yellow" onPress={() => act(pauseStep)} />
                 ) : (
                   <Button
                     label={step.status === 'paused' ? 'TIẾP TỤC' : 'BẮT ĐẦU CÔNG ĐOẠN'}
                     icon="play-arrow"
-                    disabled={!!wo.hold}
                     onPress={() => act(startStep)}
                   />
                 )}
@@ -170,7 +194,6 @@ export default function WorkOrderScreen() {
                   label="HOÀN THÀNH BƯỚC"
                   icon="check-circle"
                   tone="green"
-                  disabled={!!wo.hold || step.status === 'pending'}
                   onPress={() => act(completeStep, false)}
                 />
               </View>
