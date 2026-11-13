@@ -46,76 +46,76 @@ vMES được thiết kế theo mô hình **3-tier architecture** với phân t�
 
 ```
 vmes-mobile/
-│
 ├── app/                               # Expo Router - File-based routing
+│   ├── _layout.tsx                   # Root Stack, Stack.Protected theo đăng nhập, NetInfo, giám sát quá giờ
+│   ├── login.tsx                     # Đăng nhập mã nhân viên + PIN
 │   ├── (tabs)/
-│   │   ├── _layout.tsx               # Tab navigation layout
-│   │   ├── index.tsx                 # Technician dashboard
-│   │   └── explore.tsx               # Manager dashboard
-│   ├── _layout.tsx                   # Root layout & navigation
-│   ├── index.tsx                     # App entry point
-│   ├── scanner.tsx                   # QR Code scanner screen
-│   └── modal.tsx                     # Modal dialog template
+│   │   ├── _layout.tsx               # Tab theo vai trò (Tabs.Protected)
+│   │   ├── index.tsx                 # KTV: lệnh SX · QC: IQC/PQC · Quản lý: dashboard
+│   │   ├── work-orders.tsx           # Điều phối ưu tiên (Quản lý)
+│   │   ├── ncr.tsx                   # Danh sách NCR
+│   │   ├── notifications.tsx         # Thông báo theo vai trò
+│   │   └── profile.tsx               # Tài khoản, offline, hàng đợi đồng bộ
+│   ├── work-order/[id].tsx           # Chi tiết lệnh: công đoạn, đếm giờ, BOM, ảnh
+│   ├── scanner.tsx                   # Quét QR + đối soát
+│   ├── camera.tsx                    # Chụp ảnh + khoanh vùng lỗi
+│   ├── ncr/new.tsx, ncr/[id].tsx     # Tạo / xử lý NCR
+│   ├── iqc/[id].tsx                  # Kiểm tra đầu vào
+│   ├── pqc/[woId].tsx                # Kiểm tra quá trình / FAI
+│   └── trace.tsx                     # Truy xuất nguồn gốc
 │
-├── components/                        # Reusable React Components
-│   ├── ThemedText.tsx                # Text component with theme
-│   ├── ThemedView.tsx                # View component with theme
-│   ├── HapticTab.tsx                 # Tab with haptic feedback
-│   ├── external-link.tsx             # External link component
-│   ├── parallax-scroll-view.tsx       # Parallax scroll effect
-│   ├── hello-wave.tsx                # Welcome animation
-│   └── ui/
-│       ├── Collapsible.tsx           # Collapsible menu
-│       ├── icon-symbol.tsx           # Icon component
-│       └── icon-symbol.ios.tsx       # iOS specific icon
+├── components/
+│   ├── ui.tsx                        # UI kit: Screen, Card, Button, Badge, Chips, Field…
+│   ├── wo-card.tsx, rows.tsx         # Thẻ lệnh SX, NCR, yêu cầu cấp bù, nhật ký
+│   ├── checklist.tsx                 # Phiếu kiểm Đạt / Không đạt
+│   ├── marked-photo.tsx              # Ảnh + vòng khoanh vùng lỗi
+│   └── home/                         # Màn hình chính theo vai trò
 │
-├── hooks/                             # Custom React Hooks
-│   ├── use-color-scheme.ts           # Color scheme detection
-│   ├── use-color-scheme.web.ts       # Web-specific color scheme
-│   └── use-theme-color.ts            # Theme color hook
+├── lib/                               # Logic thuần, có unit test
+│   ├── scan.ts                       # Phân tích mã QR, đối soát BOM/IQC/COC/hạn dùng
+│   ├── metrics.ts                    # Tiến độ, màu trạng thái, bottleneck, OEE
+│   ├── format.ts, photos.ts
 │
-├── store/                             # Zustand State Management
-│   ├── useBomStore.ts                # BOM data & operations
-│   ├── useProductionStore.ts         # Production status (planned)
-│   ├── useQCStore.ts                 # QC data (planned)
-│   └── useSyncStore.ts               # Offline sync (planned)
+├── store/
+│   ├── types.ts                      # Mô hình dữ liệu
+│   ├── seed.ts                       # Dữ liệu mẫu (thay cho máy chủ)
+│   ├── useAuthStore.ts               # Phiên đăng nhập
+│   └── useMesStore.ts                # Lệnh SX, chất lượng, thông báo, truy xuất, đồng bộ
 │
-├── constants/
-│   └── theme.ts                      # Theme colors & configuration
-│
-├── assets/
-│   └── images/                       # Static images & icons
-│
-├── scripts/
-│   └── reset-project.js              # Project reset utility
-│
-├── app.json                          # Expo configuration
-├── tsconfig.json                     # TypeScript configuration
-├── eslint.config.js                  # ESLint configuration
-├── package.json                      # Dependencies
-└── README.md                         # Project documentation
+├── services/api.ts                   # pushChanges(): điểm nối backend (hiện mô phỏng)
+├── __tests__/                        # Jest
+└── constants/theme.ts                # Màu sắc, nhãn trạng thái
 ```
 
 ## State Management (Zustand)
 
-### Store Structure
+Hai store, đều `persist` xuống AsyncStorage nên dữ liệu còn nguyên khi tắt ứng dụng hoặc mất mạng:
+
+- **useAuthStore** – `userId`, `login(code, pin)`, `logout()`.
+- **useMesStore** – toàn bộ dữ liệu nghiệp vụ và action:
 
 ```typescript
-// useBomStore.ts
 {
-  // State
-  bom: BOMItem[]                    // Bill of Materials
-  selectedOrder: WorkOrder          // Current work order
-  scannedItems: ScannedItem[]       // Items scanned
-  errors: ValidationError[]         // Validation errors
-  
-  // Actions
-  setBOM(items: BOMItem[])          // Load BOM
-  addScannedItem(item: ScannedItem) // Add scanned item
-  validateBOM()                     // Validate against BOM
-  syncToServer()                    // Sync to backend
+  workOrders, iqcLots, ncrs, partRequests, pqcRecords,   // dữ liệu nghiệp vụ
+  notifications, trace,                                  // thông báo, nhật ký truy xuất
+  syncQueue, netConnected, forcedOffline, lastSyncAt,    // đồng bộ offline
+
+  startStep / pauseStep / completeStep(woId)             // công đoạn + đếm giờ
+  scan(woId, raw)                                        // đối soát mã quét
+  requestPart / decideRequest / movePriority / setHold / releaseHold
+  createNcr / updateNcr / inspectLot / savePqc
+  syncNow()                                              // đẩy hàng đợi khi có mạng
 }
 ```
+
+Mọi action thay đổi dữ liệu đều gọi `record()` nội bộ: ghi một `TraceEvent` (phục vụ truy xuất) và một `SyncItem` vào hàng đợi. Khi `netConnected && !forcedOffline`, hàng đợi được đẩy qua `services/api.ts`.
+
+### Quy tắc nghiệp vụ chính
+
+- Chỉ hoàn thành công đoạn khi đã bắt đầu tính giờ và quét đủ linh kiện BOM của công đoạn đó.
+- Lệnh bị giữ (`hold`) không thể chạy: chờ cấp bù (gỡ khi quản lý duyệt), chờ FAI (gỡ khi QC lưu FAI đạt), NCR Critical (gỡ khi NCR đóng), hoặc quản lý giữ thủ công.
+- Màu trạng thái: **đỏ** nếu bị giữ / vượt định mức / NCR Major-Critical mở / trễ hạn; **vàng** nếu ≥ 80% định mức / NCR Minor mở / chờ duyệt cấp bù; còn lại **xanh**.
+- OEE = Availability × Performance × Quality; Performance tính từ thời gian thực tế so với định mức của các công đoạn đã xong.
 
 ## Authentication & Authorization
 
@@ -283,7 +283,7 @@ Mobile App ←─WebSocket─→ Backend Server
          ▼
 ┌─────────────────────────────────┐
 │   QR Code Decoder               │
-│   (expo-barcode-scanner)        │
+│   (expo-camera)        │
 └────────┬────────────────────────┘
          │
          ▼
@@ -429,7 +429,7 @@ Log Event
 | **State** | Zustand | Lightweight, performant, easy to use |
 | **Navigation** | Expo Router | File-based routing, type-safe |
 | **Storage** | SQLite + AsyncStorage | Offline capability, structured data |
-| **Camera** | expo-camera, expo-barcode-scanner | Native integration, performant |
+| **Camera** | expo-camera, expo-camera | Native integration, performant |
 | **Styling** | React Native StyleSheet | Native performance |
 | **Language** | TypeScript | Type safety, better DX |
 | **API Client** | Axios (planned) | Simple, powerful, interceptor support |

@@ -103,40 +103,73 @@ vMES là một hệ thống Manufacturing Execution System (MES) di động, đ�
 
 Dự án sử dụng [file-based routing](https://docs.expo.dev/router/introduction). Bắt đầu chỉnh sửa các file trong thư mục **app** để phát triển.
 
+## Trạng Thái Hoàn Thiện
+
+| Tính năng | Trạng thái |
+|---|---|
+| Đăng nhập, phân quyền 3 vai trò (KTV / QC / Quản lý) | ✅ |
+| Quét QR, đối soát BOM (sai mã, hết hạn, lô chưa qua IQC, không khớp COC) | ✅ |
+| Ghi nhận công đoạn, đếm giờ, cảnh báo vượt định mức | ✅ |
+| Hướng dẫn công đoạn (dạng văn bản + lưu ý an toàn) | ✅ |
+| Yêu cầu cấp bù linh kiện và duyệt của quản lý | ✅ |
+| Chụp ảnh, khoanh vùng lỗi, lưu hồ sơ sản xuất | ✅ |
+| NCR: tạo, phân loại Minor/Major/Critical, xử lý, đóng | ✅ |
+| IQC, PQC/FAI, truy xuất nguồn gốc | ✅ |
+| Dashboard: màu trạng thái, bottleneck, OEE, năng suất trạm, thống kê lỗi | ✅ |
+| Điều phối ưu tiên, giữ / gỡ giữ lệnh | ✅ |
+| Thông báo trong ứng dụng theo vai trò | ✅ |
+| Offline: lưu cục bộ (AsyncStorage) + hàng đợi tự đồng bộ khi có mạng | ✅ (máy chủ mô phỏng) |
+| Backend API, WebSocket, push notification, đa ngôn ngữ, điều khiển giọng nói | ⏳ Chưa làm |
+
+> Dự án chưa có backend: dữ liệu ban đầu lấy từ `store/seed.ts`, việc "đẩy lên máy chủ" trong `services/api.ts` chỉ mô phỏng độ trễ mạng.
+
+### Tài khoản demo
+
+| Mã nhân viên | PIN | Vai trò |
+|---|---|---|
+| VTX1001 | 1234 | Kỹ thuật viên |
+| VTX2001 | 1234 | Nhân viên QC |
+| VTX3001 | 1234 | Quản lý sản xuất |
+
 ## Cấu Trúc Dự Án
 
 ```
 vmes-mobile/
-├── app/                      # Các màn hình ứng dụng
-│   ├── (tabs)/              # Tab navigation
-│   ├── scanner.tsx          # Màn hình quét mã QR
-│   ├── index.tsx            # Màn hình chính
-│   └── modal.tsx            # Modal dialog
-├── components/              # React components tái sử dụng
-├── constants/               # Các hằng số (theme, config)
-├── hooks/                   # Custom React hooks
-├── store/                   # State management (Zustand)
-│   └── useBomStore.ts       # BOM data store
+├── app/                      # Màn hình (Expo Router)
+│   ├── login.tsx            # Đăng nhập
+│   ├── (tabs)/              # Tab chính theo vai trò
+│   ├── work-order/[id].tsx  # Chi tiết lệnh sản xuất, công đoạn, BOM
+│   ├── scanner.tsx          # Quét QR và đối soát BOM
+│   ├── camera.tsx           # Chụp ảnh, khoanh vùng lỗi
+│   ├── ncr/                 # Tạo và xử lý NCR
+│   ├── iqc/, pqc/           # Kiểm tra đầu vào / quá trình
+│   └── trace.tsx            # Truy xuất nguồn gốc
+├── components/              # UI kit và component dùng chung
+├── lib/                     # Logic nghiệp vụ thuần (đối soát, OEE, bottleneck)
+├── store/                   # Zustand: useAuthStore, useMesStore, dữ liệu mẫu
+├── services/api.ts          # Điểm tích hợp backend (hiện mô phỏng)
+├── __tests__/               # Unit test (Jest)
 └── assets/                  # Hình ảnh và tài nguyên
 ```
 
 ## Công Nghệ Sử Dụng
 
-- **Framework:** React Native + Expo
-- **State Management:** Zustand
-- **Navigation:** Expo Router
-- **UI Components:** React Native components + Custom themed components
+- **Framework:** React Native 0.81 + Expo SDK 54
+- **State Management:** Zustand (persist qua AsyncStorage)
+- **Navigation:** Expo Router (Stack.Protected / Tabs.Protected cho phân quyền)
+- **Thiết bị:** expo-camera (quét mã, chụp ảnh), expo-image-picker, expo-file-system, NetInfo
+- **Kiểm thử:** Jest (jest-expo) – `npm test`
 - **TypeScript:** Type-safe development
 
 ## Các Tính Năng Sắp Triển Khai
 
-- [ ] Backend API integration (NodeJS/Express)
+- [ ] Backend API integration (NodeJS/Express) – thay thân hàm `pushChanges` trong `services/api.ts`
 - [ ] Database (PostgreSQL/MongoDB)
 - [ ] Real-time dashboard WebSocket
-- [ ] Camera QR code scanner optimization
-- [ ] Offline-first sync strategy
+- [ ] Hướng dẫn công đoạn dạng video/ảnh
 - [ ] Multi-language support (Vietnamese/English)
 - [ ] Push notifications
+- [ ] Thao tác bằng giọng nói
 
 ## Hỗ Trợ và Tài Liệu
 

@@ -204,133 +204,81 @@ npx expo start -c
 
 ```
 app/
-├── (tabs)/              # Tab navigation group
-│   ├── _layout.tsx      # Tab layout
-│   └── index.tsx        # Technician screen
-├── _layout.tsx          # Root layout
-├── scanner.tsx          # Scanner screen
-└── index.tsx            # Home screen
+├── _layout.tsx          # Root Stack + bảo vệ route theo trạng thái đăng nhập
+├── login.tsx            # Đăng nhập (mã nhân viên + PIN)
+├── (tabs)/              # Tab chính, thay đổi theo vai trò
+│   ├── index.tsx        # Lệnh SX (KTV) / Kiểm tra (QC) / Dashboard (Quản lý)
+│   ├── work-orders.tsx  # Điều phối ưu tiên (chỉ Quản lý)
+│   ├── ncr.tsx          # Danh sách NCR
+│   ├── notifications.tsx
+│   └── profile.tsx      # Tài khoản, offline & hàng đợi đồng bộ
+├── work-order/[id].tsx  # Chi tiết lệnh, đếm giờ công đoạn, BOM
+├── scanner.tsx          # Quét QR + đối soát BOM
+├── camera.tsx           # Chụp ảnh + khoanh vùng lỗi
+├── ncr/new.tsx, ncr/[id].tsx
+├── iqc/[id].tsx, pqc/[woId].tsx
+└── trace.tsx            # Truy xuất nguồn gốc
 
-components/             # Reusable components
-store/                  # Zustand stores
-constants/              # Constants & config
-hooks/                  # Custom hooks
+components/              # UI kit (ui.tsx) và component dùng chung
+lib/                     # Logic thuần: scan.ts, metrics.ts, format.ts, photos.ts
+store/                   # Zustand: useAuthStore, useMesStore, seed, types
+services/api.ts          # Điểm tích hợp backend (hiện mô phỏng)
+__tests__/               # Unit test (Jest)
 ```
+
+### Tài Khoản Demo
+
+| Mã nhân viên | PIN | Vai trò |
+|---|---|---|
+| VTX1001 | 1234 | Kỹ thuật viên (Nguyễn Văn A) |
+| VTX1002 | 1234 | Kỹ thuật viên (Lê Văn C) |
+| VTX2001 | 1234 | Nhân viên QC (Trần Thị B) |
+| VTX3001 | 1234 | Quản lý sản xuất (Phạm Văn D) |
+
+Dữ liệu demo nằm ở `store/seed.ts`. Vào **Tài khoản → Khôi phục dữ liệu demo** để đưa dữ liệu về trạng thái ban đầu.
+
+### Định Dạng Mã QR Linh Kiện
+
+```
+MPN|SỐ_LÔ|DATECODE|HẠN_SỬ_DỤNG(YYYY-MM-DD)|SỐ_COC
+VD: STM32F407|L2401B|2401|2028-10-13|COC-0092
+```
+
+Màn hình quét có ô nhập thủ công và danh sách **mã demo** (sinh từ hồ sơ lô IQC) để thử khi không có nhãn QR thật.
 
 ### Tạo Màn Hình Mới (Page)
 
-```bash
-# Tạo file screen mới
-touch app/new-screen.tsx
-```
+Tạo file trong `app/` (Expo Router tự sinh route) và khai báo trong `app/_layout.tsx`:
 
-File structure:
 ```typescript
 // app/new-screen.tsx
-import { View, Text } from 'react-native';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
+import { Text } from 'react-native';
+import { Card, Screen, styles as ui } from '@/components/ui';
 
 export default function NewScreen() {
   return (
-    <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ThemedText type="title">New Screen</ThemedText>
-    </ThemedView>
+    <Screen>
+      <Card>
+        <Text style={ui.title}>Màn hình mới</Text>
+      </Card>
+    </Screen>
   );
 }
-```
-
-### Tạo Component Mới
-
-```bash
-# Tạo component mới
-touch components/MyComponent.tsx
-```
-
-File structure:
-```typescript
-// components/MyComponent.tsx
-import { View, Text, StyleSheet } from 'react-native';
-import { ThemedText } from './ThemedText';
-
-interface Props {
-  title: string;
-  onPress?: () => void;
-}
-
-export function MyComponent({ title, onPress }: Props) {
-  return (
-    <View style={styles.container}>
-      <ThemedText type="subtitle">{title}</ThemedText>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    borderRadius: 8,
-  },
-});
 ```
 
 ### Sử Dụng Zustand Store
 
 ```typescript
-// store/useMyStore.ts
-import { create } from 'zustand';
+import { useMesStore } from '@/store/useMesStore';
 
-interface MyStore {
-  count: number;
-  increment: () => void;
-  decrement: () => void;
-}
-
-export const useMyStore = create<MyStore>((set) => ({
-  count: 0,
-  increment: () => set((state) => ({ count: state.count + 1 })),
-  decrement: () => set((state) => ({ count: state.count - 1 })),
-}));
+// Chọn đúng phần state cần dùng; KHÔNG trả về mảng/object mới trong selector
+const workOrders = useMesStore((s) => s.workOrders);
+const startStep = useMesStore((s) => s.startStep);
 ```
 
-Usage trong component:
-```typescript
-import { useMyStore } from '@/store/useMyStore';
+Mọi action làm thay đổi dữ liệu đều tự ghi nhật ký truy xuất và đưa vào hàng đợi đồng bộ.
 
-export default function Counter() {
-  const { count, increment, decrement } = useMyStore();
-  
-  return (
-    <View>
-      <Text>{count}</Text>
-      <Button title="+" onPress={increment} />
-      <Button title="-" onPress={decrement} />
-    </View>
-  );
-}
-```
-
-### Custom Hooks
-
-```typescript
-// hooks/useCustom.ts
-import { useState, useEffect } from 'react';
-
-export function useCustom() {
-  const [state, setState] = useState(null);
-  
-  useEffect(() => {
-    // Setup logic
-    return () => {
-      // Cleanup logic
-    };
-  }, []);
-  
-  return state;
-}
-```
-
-## Testing
+## Kiểm Thử
 
 ### Unit Tests (Jest)
 
@@ -338,31 +286,12 @@ export function useCustom() {
 # Chạy tất cả tests
 npm test
 
-# Chạy tests trong watch mode
-npm test -- --watch
-
-# Chạy test file cụ thể
-npm test -- store/useBomStore.test.ts
+# Kiểm tra kiểu và lint
+npm run typecheck
+npm run lint
 ```
 
-File structure:
-```typescript
-// store/useBomStore.test.ts
-import { renderHook, act } from '@testing-library/react';
-import { useBomStore } from './useBomStore';
-
-describe('useBomStore', () => {
-  it('should add BOM item', () => {
-    const { result } = renderHook(() => useBomStore());
-    
-    act(() => {
-      result.current.addBomItem({ id: '1', mpn: 'TEST', qty: 1 });
-    });
-    
-    expect(result.current.bom).toHaveLength(1);
-  });
-});
-```
+Test nằm trong `__tests__/` và kiểm tra logic thuần ở `lib/` (đối soát mã quét, màu trạng thái, bottleneck, OEE).
 
 ### E2E Tests (Detox)
 
