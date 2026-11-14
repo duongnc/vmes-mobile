@@ -1,53 +1,46 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
-export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
+// Bảng màu và kích thước dùng chung. Nút bấm to, tương phản cao để thao tác trong xưởng.
+export const C = {
+  primary: '#0B4F8A',
+  primaryDark: '#083B68',
+  primarySoft: '#E3EEF8',
+  bg: '#F2F4F7',
+  card: '#FFFFFF',
+  text: '#16202B',
+  sub: '#5B6775',
+  border: '#D9DEE5',
+  green: '#1E8E3E',
+  greenSoft: '#E3F4E8',
+  yellow: '#B7791F',
+  yellowSoft: '#FDF3D7',
+  red: '#C5221F',
+  redSoft: '#FBE4E3',
+  gray: '#7A8594',
+  graySoft: '#E9ECF0',
+  purple: '#6B3FA0',
+  white: '#FFFFFF',
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+export type Tone = 'primary' | 'green' | 'yellow' | 'red' | 'gray' | 'purple';
+
+export const TONE: Record<Tone, { fg: string; bg: string }> = {
+  primary: { fg: C.primary, bg: C.primarySoft },
+  green: { fg: C.green, bg: C.greenSoft },
+  yellow: { fg: C.yellow, bg: C.yellowSoft },
+  red: { fg: C.red, bg: C.redSoft },
+  gray: { fg: C.gray, bg: C.graySoft },
+  purple: { fg: C.purple, bg: '#EFE6F8' },
+};
+
+export const HEALTH_TONE = { green: 'green', yellow: 'yellow', red: 'red', done: 'gray' } as const;
+export const SEVERITY_TONE = { minor: 'yellow', major: 'red', critical: 'red' } as const;
+export const SEVERITY_LABEL = { minor: 'Minor', major: 'Major', critical: 'Critical' } as const;
+export const NCR_STATUS_LABEL = { open: 'Mới mở', reviewing: 'Đang xử lý', closed: 'Đã đóng' } as const;
+export const NCR_STATUS_TONE = { open: 'red', reviewing: 'yellow', closed: 'green' } as const;
+export const DISPOSITION_LABEL = {
+  rework: 'Sửa lại (Rework)',
+  scrap: 'Huỷ bỏ (Scrap)',
+  'use-as-is': 'Chấp nhận dùng (Use as is)',
+  return: 'Trả nhà cung cấp',
+} as const;
+export const LOT_STATUS_LABEL = { pending: 'Chờ kiểm', accepted: 'Chấp nhận', rejected: 'Từ chối' } as const;
+export const LOT_STATUS_TONE = { pending: 'yellow', accepted: 'green', rejected: 'red' } as const;
