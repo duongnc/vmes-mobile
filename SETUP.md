@@ -4,18 +4,21 @@
 
 ### Môi Trường Phát Triển
 
-- **Operating System:** macOS 10.14+, Windows 10+, Linux (Ubuntu 18.04+)
-- **Node.js:** v16.0.0 hoặc cao hơn
-- **npm:** v7.0.0 hoặc cao hơn (hoặc yarn v1.22.0+)
-- **Expo CLI:** Latest version
+- **Hệ điều hành:** macOS, Windows hoặc Linux có hỗ trợ Node.js 20. iOS Simulator chỉ chạy trên macOS (cần Xcode).
+- **Node.js:** 20.19.4 trở lên (yêu cầu của React Native 0.81).
+- **npm:** đi kèm Node.js. Dự án dùng `package-lock.json`, nên dùng npm thay vì yarn.
+- **Expo CLI:** không cần cài toàn cục. Dùng `npx expo` hoặc các script trong `package.json` (CLI đi kèm gói `expo`).
 
 ### Thiết Bị Mobile
 
-- **iOS:** iPhone/iPad iOS 13.0+
-- **Android:** Android 8.0+ (API level 26+)
-- **Emulator:** 
-  - iOS: Xcode Simulator (macOS only)
+- **iOS:** iOS 15.1 trở lên (yêu cầu của React Native 0.81).
+- **Android:** Android 7.0 trở lên (API 24).
+- **Expo Go:** phải là bản hỗ trợ **Expo SDK 54** (dự án dùng SDK 54).
+- **Emulator:**
+  - iOS: Xcode Simulator (chỉ macOS)
   - Android: Android Studio Emulator
+
+> Simulator và Emulator thường không có camera thật. Ở màn hình quét hãy dùng nút **Dùng mã demo** (xem mục Định Dạng Mã QR).
 
 ## Cài Đặt Ban Đầu
 
@@ -27,147 +30,107 @@
 # Sử dụng Homebrew
 brew install node
 
-# Kiểm tra phiên bản
+# Kiểm tra phiên bản (cần Node 20.19.4 trở lên)
 node --version
 npm --version
 ```
 
 #### Trên Windows
 
-- Download từ https://nodejs.org
-- Chạy installer và follow hướng dẫn
-- Kiểm tra: `node --version` & `npm --version`
+- Tải bản LTS từ https://nodejs.org
+- Chạy trình cài đặt và làm theo hướng dẫn
+- Kiểm tra: `node --version` và `npm --version`
 
-#### Trên Linux (Ubuntu)
+#### Trên Linux
+
+Gói `nodejs` trong kho mặc định của nhiều bản Ubuntu quá cũ. Nên dùng nvm (xem hướng dẫn cài tại https://github.com/nvm-sh/nvm), rồi:
 
 ```bash
-sudo apt update
-sudo apt install nodejs npm
-
-# Hoặc sử dụng nvm (Node Version Manager)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 16
-nvm use 16
+nvm install --lts
+nvm use --lts
+node --version   # phải từ 20.19.4 trở lên
 ```
 
-### 2. Cài Đặt Expo CLI
+### 2. Clone Repository
 
 ```bash
-# Cài đặt toàn cục
-npm install -g expo-cli
-
-# Hoặc cài đặt với yarn
-yarn global add expo-cli
-
-# Kiểm tra cài đặt
-expo --version
-```
-
-### 3. Clone Repository
-
-```bash
-# Clone từ GitHub
 git clone https://github.com/duongnc/vmes-mobile.git
 cd vmes-mobile
-
-# Hoặc nếu bạn đã có local repo
-cd /Users/duong/MobileApps/vmes-mobile
 ```
 
-### 4. Cài Đặt Dependencies
+### 3. Cài Đặt Dependencies
 
 ```bash
-# Sử dụng npm
-npm install
-
-# Hoặc sử dụng yarn (recommended)
-yarn install
-
-# Nếu bạn gặp vấn đề, thử xóa node_modules
-rm -rf node_modules package-lock.json
 npm install
 ```
 
-### 5. Cấu Hình Environment
-
-Tạo file `.env` tại root directory (không commit lên git):
+Nếu gặp lỗi lạ, thử cài lại từ đầu:
 
 ```bash
-# .env
-REACT_APP_API_URL=http://localhost:3000
-REACT_APP_ENV=development
-REACT_APP_DEBUG=true
+rm -rf node_modules
+npm install
 ```
 
-Thêm vào `.gitignore`:
+### 4. Cấu Hình Môi Trường
 
-```
-.env
-.env.local
-.env.*.local
-```
+**Không cần tạo tệp `.env`.** Ứng dụng không đọc biến môi trường nào và chưa có địa chỉ API, vì chưa có backend. Dữ liệu ban đầu lấy từ `store/seed.ts`; việc "đẩy lên máy chủ" trong `services/api.ts` chỉ mô phỏng độ trễ mạng.
 
 ## Chạy Ứng Dụng
 
-### Phương Pháp 1: Sử Dụng Expo CLI (Recommended)
+### Phương Pháp 1: Dùng Expo CLI (khuyến nghị)
 
 ```bash
-# Khởi động Expo server
-npx expo start
-
-# Tùy chọn khác
-npx expo start --clear          # Clear cache
-npx expo start --tunnel         # Sử dụng tunnel (network)
-npx expo start --localhost      # Localhost only
+npm start                       # tương đương npx expo start
 ```
 
-Sau khi chạy, bạn sẽ thấy:
-
-```
-Expo CLI 6.0.0 starting...
-
-› Metro waiting on exp://192.168.1.100:19000
-
-› Scan this QR code:
-
-  ┌────────────────────────────┐
-  │  [QR CODE HERE]            │
-  └────────────────────────────┘
-
-Press:
-  a - open Android
-  i - open iOS simulator
-  w - open web
-  r - reload app
-  m - toggle menu
-  o - open project in Expo Go
-```
-
-### Phương Pháp 2: Mở iOS Simulator (macOS only)
+Tùy chọn thường dùng:
 
 ```bash
-npx expo start -c
-# Nhấn 'i'
+npx expo start --clear          # Xóa cache Metro
+npx expo start --tunnel         # Dùng tunnel khi điện thoại và máy tính khác mạng
+npx expo start --localhost      # Chỉ truy cập từ máy này
+npx expo start --port 8082      # Đổi cổng (mặc định 8081)
 ```
 
-### Phương Pháp 3: Mở Android Emulator
+Metro mặc định chạy ở cổng **8081**. Sau khi khởi động, các phím tắt trong terminal:
+
+| Phím | Tác dụng |
+|---|---|
+| `a` | Mở Android |
+| `i` | Mở iOS Simulator |
+| `w` | Mở bản web |
+| `r` | Tải lại app |
+| `j` | Mở debugger |
+| `m` | Bật/tắt menu |
+| `o` | Mở mã nguồn trong editor |
+| `?` | Xem toàn bộ phím tắt |
+
+Có sẵn các script rút gọn: `npm run ios`, `npm run android`, `npm run web`.
+
+### Phương Pháp 2: iOS Simulator (chỉ macOS)
+
+```bash
+npm run ios
+# hoặc: npm start rồi nhấn 'i'
+```
+
+Cần Xcode và đã cài iOS Simulator. Expo sẽ cài Expo Go vào Simulator nếu chưa có.
+
+### Phương Pháp 3: Android Emulator
 
 #### Yêu Cầu Setup Android
 
-```bash
-# Cài đặt Android Studio từ https://developer.android.com/studio
+Cài Android Studio từ https://developer.android.com/studio rồi đặt biến môi trường:
 
-# Set ANDROID_HOME environment variable
+```bash
+# macOS
 export ANDROID_HOME=$HOME/Library/Android/sdk
+# Linux: export ANDROID_HOME=$HOME/Android/Sdk
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/platform-tools
-
-# Hoặc thêm vào ~/.zshrc hoặc ~/.bash_profile
-echo 'export ANDROID_HOME=$HOME/Library/Android/sdk' >> ~/.zshrc
-echo 'export PATH=$PATH:$ANDROID_HOME/emulator' >> ~/.zshrc
-echo 'export PATH=$PATH:$ANDROID_HOME/platform-tools' >> ~/.zshrc
-source ~/.zshrc
 ```
+
+Thêm các dòng trên vào `~/.zshrc` hoặc `~/.bashrc` để dùng lâu dài.
 
 #### Chạy Emulator
 
@@ -175,28 +138,38 @@ source ~/.zshrc
 # Liệt kê các emulator khả dụng
 emulator -list-avds
 
-# Khởi động emulator
-emulator -avd Pixel_6_API_30
+# Khởi động emulator (thay <tên_avd> bằng tên trong danh sách)
+emulator -avd <tên_avd>
 
-# Sau đó start Expo
-npx expo start -c
-# Nhấn 'a'
+# Sau đó chạy Expo
+npm run android
+# hoặc: npm start rồi nhấn 'a'
 ```
 
-### Phương Pháp 4: Sử Dụng Expo Go (Mobile Phone)
+### Phương Pháp 4: Dùng Expo Go Trên Điện Thoại
 
-1. Download **Expo Go** từ:
+1. Cài **Expo Go** (bản hỗ trợ SDK 54) từ:
    - [iOS App Store](https://apps.apple.com/app/expo-go/id1293062562)
    - [Android Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent)
 
 2. Chạy Expo server:
    ```bash
-   npx expo start
+   npm start
    ```
 
-3. Quét QR code bằng camera hoặc Expo Go app
+3. Quét mã QR bằng camera (iOS) hoặc bằng Expo Go (Android). Điện thoại và máy tính cần cùng mạng Wi-Fi, nếu không dùng `--tunnel`.
 
-4. App sẽ load trong vài giây
+### Phương Pháp 5: Bản Web
+
+```bash
+npm run web
+```
+
+Build bản web tĩnh (đầu ra ở `dist/`, đã nằm trong `.gitignore`):
+
+```bash
+npx expo export --platform web
+```
 
 ## Phát Triển
 
@@ -224,6 +197,8 @@ lib/                     # Logic thuần: scan.ts, metrics.ts, format.ts, photos
 store/                   # Zustand: useAuthStore, useMesStore, seed, types
 services/api.ts          # Điểm tích hợp backend (hiện mô phỏng)
 __tests__/               # Unit test (Jest)
+e2e/                     # Kịch bản E2E (Playwright) trên bản web
+docs/                    # Báo cáo đồ án (docx)
 ```
 
 ### Tài Khoản Demo
@@ -241,14 +216,14 @@ Dữ liệu demo nằm ở `store/seed.ts`. Vào **Tài khoản → Khôi phục
 
 ```
 MPN|SỐ_LÔ|DATECODE|HẠN_SỬ_DỤNG(YYYY-MM-DD)|SỐ_COC
-VD: STM32F407|L2401B|2401|2028-10-13|COC-0092
+VD: STM32F407|L2401B|2401|2028-10-14|COC-0092
 ```
 
-Màn hình quét có ô nhập thủ công và danh sách **mã demo** (sinh từ hồ sơ lô IQC) để thử khi không có nhãn QR thật.
+Dấu phân tách có thể là `|` hoặc `;`. Màn hình quét có ô nhập thủ công và danh sách **mã demo** (sinh từ hồ sơ lô IQC) để thử khi không có nhãn QR thật. Nếu nhãn chỉ ghi mã linh kiện (không có số lô), ứng dụng cho chọn một lô đã qua IQC và còn hạn thay vì từ chối.
 
 ### Tạo Màn Hình Mới (Page)
 
-Tạo file trong `app/` (Expo Router tự sinh route) và khai báo trong `app/_layout.tsx`:
+Expo Router tự sinh route từ tệp trong `app/`. Để đặt tiêu đề, khai báo thêm `Stack.Screen` trong nhóm `Stack.Protected` của `app/_layout.tsx`:
 
 ```typescript
 // app/new-screen.tsx
@@ -276,53 +251,51 @@ const workOrders = useMesStore((s) => s.workOrders);
 const startStep = useMesStore((s) => s.startStep);
 ```
 
-Mọi action làm thay đổi dữ liệu đều tự ghi nhật ký truy xuất và đưa vào hàng đợi đồng bộ.
+Mọi action làm thay đổi dữ liệu đều tự ghi nhật ký truy xuất và đưa vào hàng đợi đồng bộ. Chi tiết mô hình dữ liệu ở [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Kiểm Thử
 
-### Unit Tests (Jest)
+### Kiểm Tra Tĩnh và Unit Test (Jest)
 
 ```bash
-# Chạy tất cả tests
-npm test
-
-# Kiểm tra kiểu và lint
-npm run typecheck
-npm run lint
+npm test             # Chạy unit test
+npm run typecheck    # Kiểm tra kiểu TypeScript
+npm run lint         # ESLint
 ```
 
 Test nằm trong `__tests__/` và kiểm tra logic thuần ở `lib/` (đối soát mã quét, màu trạng thái, bottleneck, OEE).
 
-### E2E Tests (Detox)
+### E2E Tests (Playwright, bản web)
+
+Kịch bản E2E chạy trên bản web đã build, không dùng Detox. Playwright **chưa khai báo trong `package.json`**, cần cài riêng:
 
 ```bash
-# Build detox configuration
-detox build-framework-cache
-detox build-app --configuration ios.sim.debug
-
-# Chạy E2E tests
-detox test --configuration ios.sim.debug --cleanup
+npm install --no-save playwright
+npx playwright install chromium
 ```
+
+Chạy (theo hướng dẫn ở đầu mỗi tệp trong `e2e/`):
+
+```bash
+npx expo export --platform web --output-dir dist
+node e2e/serve.js dist &            # phục vụ bản build ở http://localhost:8099/
+
+node e2e/flow-all-roles.js          # đi hết luồng của 3 vai trò
+node e2e/regress-stuck.js           # hồi quy lỗi kỹ thuật viên bị kẹt
+```
+
+Đặt biến `BASE_URL` để đổi địa chỉ. Ảnh chụp màn hình được lưu vào `e2e/shots/` (đã nằm trong `.gitignore`). Các ca kiểm thử và kết quả chi tiết ở [test.md](test.md).
 
 ## Debugging
 
-### Remote Debugger (React Native Debugger)
+### Công Cụ Phát Triển
 
-```bash
-# Cài đặt React Native Debugger
-brew install react-native-debugger
-
-# Hoặc download từ:
-# https://github.com/jhen0409/react-native-debugger
-
-# Mở app
-open "rndebugger://set-debugger-loc?host=localhost&port=8081"
-```
+Khi `npm start` đang chạy, nhấn `j` để mở debugger, `m` để mở menu phát triển, `r` để tải lại app.
 
 ### Console Logging
 
 ```typescript
-// Tắt __DEV__ logs trong production
+// Chỉ log khi phát triển
 if (__DEV__) {
   console.log('Debug info');
 }
@@ -330,86 +303,55 @@ if (__DEV__) {
 
 ### Network Debugging
 
-```bash
-# Sử dụng Charles Proxy hoặc Wireshark
-# Cấu hình proxy trong app:
-const API_URL = __DEV__ 
-  ? 'http://192.168.1.100:3000'
-  : 'https://api.production.com';
-```
+Ứng dụng hiện không gọi mạng nào (chưa có backend). Khi nối máy chủ, địa chỉ API và logic gọi nằm ở `services/api.ts`.
 
 ### Xem Logs
 
 ```bash
-# Expo logs realtime
-npx expo start --clear
+# Log Metro: xem ngay trong terminal đang chạy npm start
 
 # Android logs
 adb logcat
 
-# iOS logs
+# iOS Simulator logs
 xcrun simctl spawn booted log stream --predicate 'eventMessage contains[c] "vmes"'
 ```
 
 ## Build & Deployment
 
-### Local Build
+> Dự án **chưa có cấu hình build bản cài đặt**: chưa có `eas.json`, `app.json` chưa khai báo `ios.bundleIdentifier` và `android.package`, và chưa cài `expo-updates`. Các bước dưới đây là việc cần làm khi muốn phát hành.
 
-#### iOS
+### Bản Web Tĩnh
 
 ```bash
-# Yêu cầu: Xcode & Apple Developer Account
-
-# Build .ipa file
-eas build --platform ios --local
-
-# Hoặc sử dụng Xcode directly
-xcodebuild -workspace ios/vmesMobile.xcworkspace \
-  -scheme vmesMobile \
-  -configuration Release \
-  -derivedDataPath build \
-  -archivePath build/vmesMobile.xcarchive \
-  archive
+npx expo export --platform web      # đầu ra ở dist/
 ```
 
-#### Android
+### Build Native Cục Bộ
 
 ```bash
-# Yêu cầu: Android SDK, Keystore
+# Sinh thư mục ios/ và android/ (đã nằm trong .gitignore)
+npx expo prebuild
 
-# Build APK
-eas build --platform android --local
-
-# Hoặc sử dụng Gradle
-cd android
-./gradlew assembleRelease
-cd ..
+# Build và chạy trên simulator/emulator
+npx expo run:ios                    # cần Xcode
+npx expo run:android                # cần Android SDK
 ```
 
-### Cloud Build (EAS)
+### Build Bằng EAS
+
+Trước hết thêm `ios.bundleIdentifier` và `android.package` vào `app.json`, rồi:
 
 ```bash
-# Login vào EAS
-eas login
-
-# Build trên cloud
-eas build --platform ios
-eas build --platform android
-
-# Build & submit to app store
-eas build --platform ios --auto-submit
-eas submit --platform ios
+npx eas-cli login
+npx eas-cli build:configure         # tạo eas.json
+npx eas-cli build --platform ios
+npx eas-cli build --platform android
 ```
 
 ### Over-the-Air (OTA) Updates
 
-```bash
-# Publish update
-eas update
-
-# Hoặc update specific channel
-eas update --branch production
-```
+Cần cài `expo-updates` và cấu hình EAS Update trước; chưa được thiết lập trong dự án này. Xem [tài liệu EAS Update](https://docs.expo.dev/eas-update/introduction/).
 
 ## Troubleshooting
 
@@ -422,114 +364,74 @@ lsof -i :8081
 # Kill process
 kill -9 <PID>
 
-# Hoặc sử dụng port khác
+# Hoặc dùng port khác
 npx expo start --port 8082
 ```
 
 ### Issue: Module Not Found
 
 ```bash
-# Xóa cache & reinstall
-rm -rf node_modules yarn.lock
-yarn install
-
-# Hoặc
-npm cache clean --force
+# Xóa cache và cài lại
+rm -rf node_modules
 npm install
+npx expo start --clear
 ```
 
-### Issue: Camera Permission Denied (Android)
+### Issue: Expo Cảnh Báo Phiên Bản Gói Không Tương Thích
 
-```typescript
-// Request permissions
-import * as Permissions from 'expo-permissions';
+Khi khởi động, Expo có thể báo "The following packages should be updated for best compatibility". Kiểm tra và sửa:
 
-const requestCameraPermission = async () => {
-  const { status } = await Permissions.askAsync(Permissions.CAMERA);
-  return status === 'granted';
-};
+```bash
+npx expo install --check            # liệt kê gói lệch phiên bản
+npx expo install --fix              # đưa về phiên bản tương thích với SDK
 ```
 
-### Issue: Storage Permission (Android)
+### Issue: Camera Không Hoạt Động
 
-```typescript
-import * as MediaLibrary from 'expo-media-library';
+- Ứng dụng xin quyền camera bằng `useCameraPermissions` của `expo-camera`. Nếu chưa cấp quyền, màn hình quét và chụp ảnh hiện nút **Cấp quyền camera** (khi hệ điều hành còn cho hỏi lại).
+- Nếu đã từ chối hẳn, bật lại quyền camera cho Expo Go (hoặc app) trong phần Cài đặt của hệ điều hành.
+- iOS Simulator không có camera thật: dùng **Dùng mã demo** để thử đối soát.
 
-const requestMediaPermission = async () => {
-  const { status } = await MediaLibrary.requestPermissionsAsync();
-  return status === 'granted';
-};
-```
+### Issue: Quyền Lưu Trữ / Thư Viện Ảnh
+
+Ứng dụng không cần quyền ghi bộ nhớ ngoài: ảnh chụp được sao chép vào thư mục tài liệu của app (`photos/`). Chọn ảnh từ thư viện dùng `expo-image-picker`; nội dung xin quyền được khai báo trong `app.json`.
+
+### Issue: Dữ Liệu Demo Bị Lệch Hoặc App Lỗi Sau Khi Đổi Cấu Trúc Dữ Liệu
+
+Dữ liệu lưu trên máy (`vmes-data`) có `version: 1` và chưa có hàm `migrate`. Vào **Tài khoản → Khôi phục dữ liệu demo**, hoặc xóa dữ liệu ứng dụng (gỡ và cài lại Expo Go / app) để làm sạch.
 
 ### Issue: Build Fails
 
 ```bash
-# Xem detailed error
-npx expo start --verbose
+# Kiểm tra môi trường
+npx expo-doctor
 
-# Clear all caches
-expo prebuild --clean
-rm -rf node_modules package-lock.json
+# Sinh lại thư mục native và cài lại gói
+npx expo prebuild --clean
+rm -rf node_modules
 npm install
 ```
 
 ## Performance Optimization
 
-### Memory Management
-
-```typescript
-// Cleanup trong useEffect
-useEffect(() => {
-  // Setup
-  return () => {
-    // Cleanup to prevent memory leaks
-  };
-}, []);
-```
-
-### Image Optimization
-
-```typescript
-import { Image } from 'react-native';
-
-<Image
-  source={require('./image.png')}
-  style={{ width: 200, height: 200 }}
-  resizeMode="contain"
-/>
-```
-
-### List Optimization
-
-```typescript
-import { FlatList } from 'react-native';
-
-<FlatList
-  data={items}
-  renderItem={({ item }) => <Item item={item} />}
-  keyExtractor={(item) => item.id}
-  removeClippedSubviews
-  maxToRenderPerBatch={10}
-/>
-```
+- Số đo hiệu năng thực tế (kích thước bundle, tốc độ logic, bộ nhớ) và so sánh với mục tiêu: [SPECS.md](SPECS.md), mục 10 và 11.
+- Cách tổ chức dữ liệu và bộ nhớ đệm: [ARCHITECTURE.md](ARCHITECTURE.md), mục Performance Optimization.
+- Khi viết màn hình mới: chọn đúng phần state trong selector (xem ví dụ Zustand ở trên) và dọn dẹp bộ đếm trong `useEffect` (ví dụ `useNow` trong `components/ui.tsx`).
 
 ## Version Management
 
 ### Update Dependencies
 
 ```bash
-# Kiểm tra outdated packages
+# Kiểm tra gói đã cũ
 npm outdated
 
-# Update minor/patch versions
-npm update
-
-# Update major versions (careful!)
-npm install package@latest
-
-# Expo SDK update
-expo upgrade
+# Kiểm tra và sửa gói lệch phiên bản so với Expo SDK
+npx expo install --check
+npx expo install --fix
 ```
+
+Nâng cấp Expo SDK theo hướng dẫn chính thức: https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/
 
 ## Resources
 
@@ -541,30 +443,26 @@ expo upgrade
 
 ## Support & Contact
 
-For issues or questions:
 - **GitHub Issues:** https://github.com/duongnc/vmes-mobile/issues
-- **Documentation:** See README.md and ARCHITECTURE.md
-- **Email:** [Support contact info]
+- **Tài liệu:** [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md), [SPECS.md](SPECS.md), [test.md](test.md)
 
 ## Quick Command Reference
 
 ```bash
-# Development
-npm install              # Install dependencies
-npm start               # Start Expo server
-npm test                # Run tests
-npm run lint            # Run ESLint
+# Phát triển
+npm install              # Cài dependencies
+npm start                # Chạy Expo server (Metro, cổng 8081)
+npm run ios              # Mở iOS Simulator
+npm run android          # Mở Android Emulator
+npm run web              # Chạy bản web
 
-# Building
-eas build --platform ios
-eas build --platform android
+# Chất lượng
+npm test                 # Unit test (Jest)
+npm run typecheck        # Kiểm tra kiểu
+npm run lint             # ESLint
 
-# Deployment
-eas update              # OTA update
-eas submit --platform ios
-
-# Utilities
-expo doctor             # Check environment
-expo reset              # Reset project
-expo logout             # Logout from Expo account
+# Tiện ích
+npx expo install --check # Kiểm tra gói lệch phiên bản
+npx expo-doctor          # Kiểm tra môi trường
+npx expo export --platform web   # Build bản web tĩnh
 ```

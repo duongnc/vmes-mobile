@@ -31,11 +31,11 @@ vMES là một hệ thống Manufacturing Execution System (MES) di động, đ�
 
 ### 4. Tạo Báo Cáo NCR (Non-Conformance Report)
 - Tạo NCR nhanh chóng tại chỗ
-- Phân loại mức độ lỗi (Minor/Major/Critical)
-- Tự động thông báo đến quản lý
+- Phân loại mức độ lỗi (Minor/Major/Critical); NCR Critical tự động tạm dừng và giữ lệnh
+- Tự động thông báo trong ứng dụng đến quản lý và QC
 
 ### 5. Dashboard Tổng Quan (cho Quản lý)
-- Hiển thị tiến độ từng Work Order (WO) theo thời gian thực
+- Hiển thị tiến độ từng Work Order (WO) từ dữ liệu trên máy (chưa có backend nên chưa dùng chung giữa nhiều máy)
 - Màu sắc trạng thái: Xanh (trôi chảy), Vàng (sắp tắc), Đỏ (tắc)
 - Cảnh báo bottleneck tự động
 - Thống kê OEE và năng suất từng trạm
@@ -50,7 +50,7 @@ vMES là một hệ thống Manufacturing Execution System (MES) di động, đ�
 - Xem lệnh sản xuất và công đoạn hiện tại
 - Quét linh kiện và xác nhận nhận được
 - Báo cáo lỗi hoặc yêu cầu thêm linh kiện (Request Extra Part)
-- Xem hướng dẫn công đoạn dạng video/ảnh
+- Xem hướng dẫn công đoạn (hiện dạng văn bản kèm lưu ý an toàn; video/ảnh chưa có)
 - Giảm thao tác giấy tờ tối đa
 
 ### Nhân Viên QC
@@ -60,8 +60,8 @@ vMES là một hệ thống Manufacturing Execution System (MES) di động, đ�
 - Xem lịch sử truy xuất sản phẩm
 
 ### Quản Lý Sản Xuất
-- Dashboard theo thời gian thực
-- Cảnh báo sự cố: thiếu linh kiện, máy hỏng, bottleneck
+- Dashboard tiến độ, màu trạng thái, bottleneck, OEE (dữ liệu trên máy, chưa có thời gian thực qua máy chủ)
+- Cảnh báo sự cố: vượt định mức, yêu cầu cấp bù linh kiện, NCR, bottleneck (cảnh báo máy hỏng chưa có)
 - Điều phối ưu tiên các lô hàng
 - Xem báo cáo OEE, năng suất, thống kê lỗi
 
@@ -69,7 +69,7 @@ vMES là một hệ thống Manufacturing Execution System (MES) di động, đ�
 
 | Nguyên Tắc | Giải Thích |
 |-----------|-----------|
-| **Tối giản thao tác vật lý** | Hỗ trợ thao tác bằng giọng nói, nút bấm to, quét mã tự động |
+| **Tối giản thao tác vật lý** | Nút bấm to, quét mã tự động (thao tác bằng giọng nói: chưa làm) |
 | **Không dùng giấy** | Mọi biên bản, BOM, phiếu kiểm tra đều số hóa |
 | **Hoạt động offline** | Dữ liệu lưu local, đồng bộ sau khi có kết nối |
 | **Cảnh báo thông minh** | Chủ động đẩy thông báo, không để người dùng phải đi hỏi |
@@ -78,9 +78,10 @@ vMES là một hệ thống Manufacturing Execution System (MES) di động, đ�
 ## Cài Đặt và Chạy Ứng Dụng
 
 ### Yêu Cầu
-- Node.js 16+
-- npm hoặc yarn
-- Expo CLI
+- Node.js 20.19.4 trở lên (yêu cầu của React Native 0.81)
+- npm (đi kèm Node.js; dự án dùng `package-lock.json`)
+- Không cần cài Expo CLI toàn cục, dùng `npx expo`
+- Thiết bị chạy thử: iOS 15.1 trở lên, Android 7.0 trở lên, hoặc iOS Simulator / Android Emulator
 
 ### Các Bước Cài Đặt
 
@@ -91,13 +92,24 @@ vMES là một hệ thống Manufacturing Execution System (MES) di động, đ�
 
 2. **Khởi động ứng dụng**
    ```bash
-   npx expo start
+   npm start
    ```
 
 3. **Mở ứng dụng**
    - Nhập `i` để mở iOS Simulator
    - Nhập `a` để mở Android Emulator
+   - Nhập `w` để mở bản web
    - Quét QR code bằng Expo Go (iOS/Android)
+
+   Simulator không có camera: ở màn hình quét dùng nút **Dùng mã demo**. Hướng dẫn chi tiết ở [SETUP.md](SETUP.md).
+
+### Kiểm Tra Chất Lượng
+
+```bash
+npm test             # Unit test (Jest)
+npm run typecheck    # Kiểm tra kiểu TypeScript
+npm run lint         # ESLint
+```
 
 ### Phát Triển
 
@@ -119,7 +131,8 @@ Dự án sử dụng [file-based routing](https://docs.expo.dev/router/introduct
 | Điều phối ưu tiên, giữ / gỡ giữ lệnh | ✅ |
 | Thông báo trong ứng dụng theo vai trò | ✅ |
 | Offline: lưu cục bộ (AsyncStorage) + hàng đợi tự đồng bộ khi có mạng | ✅ (máy chủ mô phỏng) |
-| Backend API, WebSocket, push notification, đa ngôn ngữ, điều khiển giọng nói | ⏳ Chưa làm |
+| Kiểm thử: unit test Jest cho logic ở `lib/`, E2E Playwright trên bản web (`e2e/`) | ✅ |
+| Backend API, WebSocket, push notification, đa ngôn ngữ, điều khiển giọng nói, hướng dẫn công đoạn dạng video/ảnh | ⏳ Chưa làm |
 
 > Dự án chưa có backend: dữ liệu ban đầu lấy từ `store/seed.ts`, việc "đẩy lên máy chủ" trong `services/api.ts` chỉ mô phỏng độ trễ mạng.
 
@@ -127,9 +140,12 @@ Dự án sử dụng [file-based routing](https://docs.expo.dev/router/introduct
 
 | Mã nhân viên | PIN | Vai trò |
 |---|---|---|
-| VTX1001 | 1234 | Kỹ thuật viên |
-| VTX2001 | 1234 | Nhân viên QC |
-| VTX3001 | 1234 | Quản lý sản xuất |
+| VTX1001 | 1234 | Kỹ thuật viên (Nguyễn Văn A, trạm Hàn sóng) |
+| VTX1002 | 1234 | Kỹ thuật viên (Lê Văn C, trạm SMT) |
+| VTX2001 | 1234 | Nhân viên QC (Trần Thị B) |
+| VTX3001 | 1234 | Quản lý sản xuất (Phạm Văn D) |
+
+Vào **Tài khoản → Khôi phục dữ liệu demo** để đưa dữ liệu về trạng thái ban đầu.
 
 ## Cấu Trúc Dự Án
 
@@ -149,8 +165,20 @@ vmes-mobile/
 ├── store/                   # Zustand: useAuthStore, useMesStore, dữ liệu mẫu
 ├── services/api.ts          # Điểm tích hợp backend (hiện mô phỏng)
 ├── __tests__/               # Unit test (Jest)
-└── assets/                  # Hình ảnh và tài nguyên
+├── e2e/                     # Kịch bản E2E Playwright trên bản web
+├── docs/                    # Báo cáo đồ án (docx)
+├── assets/                  # Hình ảnh và tài nguyên
+└── ARCHITECTURE.md, SETUP.md, SPECS.md, test.md   # Tài liệu (xem bên dưới)
 ```
+
+## Tài Liệu
+
+| Tệp | Nội dung |
+|---|---|
+| [SETUP.md](SETUP.md) | Cài đặt, chạy trên simulator và thiết bị, kiểm thử, xử lý sự cố |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Kiến trúc, mô hình dữ liệu, luồng dữ liệu, offline, bảo mật |
+| [SPECS.md](SPECS.md) | Bảng specs, số đo hiệu năng, so sánh thiết kế và thực tế |
+| [test.md](test.md) | Các ca kiểm thử và kết quả |
 
 ## Công Nghệ Sử Dụng
 
@@ -158,8 +186,8 @@ vmes-mobile/
 - **State Management:** Zustand (persist qua AsyncStorage)
 - **Navigation:** Expo Router (Stack.Protected / Tabs.Protected cho phân quyền)
 - **Thiết bị:** expo-camera (quét mã, chụp ảnh), expo-image-picker, expo-file-system, NetInfo
-- **Kiểm thử:** Jest (jest-expo) – `npm test`
-- **TypeScript:** Type-safe development
+- **Kiểm thử:** Jest (jest-expo) – `npm test`; Playwright cho E2E bản web (cài riêng, xem [SETUP.md](SETUP.md))
+- **TypeScript:** chế độ `strict`
 
 ## Các Tính Năng Sắp Triển Khai
 
