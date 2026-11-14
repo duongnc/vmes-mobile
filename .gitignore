@@ -41,3 +41,6 @@ app-example
 # generated native folders
 /ios
 /android
+
+# ảnh chụp khi chạy kiểm thử đầu-cuối
+e2e/shots/
